@@ -1,52 +1,128 @@
-from flask import Flask
+from flask import Flask, jsonify, render_template_string
 
 app = Flask(__name__)
 
+# Sample instance data
 instances = [
     {"id": "i-101", "cpu": 10, "cost": 5},
     {"id": "i-102", "cpu": 80, "cost": 10},
     {"id": "i-103", "cpu": 35, "cost": 7}
 ]
 
+# Home route (UI)
 @app.route('/')
 def home():
-    return """
-    <html>
-    <head>
-        <title>Cloud Cost Optimizer</title>
-        <style>
-            body {
-                margin: 0;
-                font-family: Arial;
-                background-color: #0d6efd;
-                color: white;
-                text-align: center;
-                padding-top: 100px;
-            }
-            button {
-                padding: 12px 25px;
-                background-color: white;
-                color: #0d6efd;
-                border: none;
-                border-radius: 5px;
-                font-size: 16px;
-                cursor: pointer;
-                font-weight: bold;
-            }
-        </style>
-    </head>
-    <body>
-        <h1 style="font-size: 40px;">🚀 Cloud Cost Optimizer</h1>
-        <p>Analyze your cloud usage and reduce unnecessary costs</p>
+    return render_template_string("""
+<html>
+<head>
+    <title>Cloud Cost Optimizer</title>
+    <style>
+        body {
+            background: #0b1f3a;
+            color: white;
+            font-family: Arial;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        .card {
+            background: #1e3a5f;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            color: black;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #007BFF;
+            color: white;
+        }
+        .stop { color: red; font-weight: bold; }
+        .resize { color: orange; font-weight: bold; }
+        .ok { color: green; font-weight: bold; }
 
-        <br>
-        <button onclick="window.location.href='/optimize'">
-            Go to Dashboard
-        </button>
-    </body>
-    </html>
-    """
+        button {
+            padding: 12px 25px;
+            background: #28a745;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
 
+<h1>☁️ Smart Cloud Cost Optimizer</h1>
+
+<div class="card">
+    <button onclick="loadData()">🚀 Optimize Now</button>
+
+    <table id="resultTable">
+        <tr>
+            <th>Instance ID</th>
+            <th>CPU</th>
+            <th>Action</th>
+            <th>Savings</th>
+        </tr>
+    </table>
+
+    <h2 id="total"></h2>
+</div>
+
+<script>
+function loadData() {
+    fetch('/optimize')
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("resultTable");
+
+        table.innerHTML = `
+        <tr>
+            <th>Instance ID</th>
+            <th>CPU</th>
+            <th>Action</th>
+            <th>Savings</th>
+        </tr>`;
+
+        data.results.forEach(item => {
+            let className = "";
+            if (item.action === "STOP") className = "stop";
+            else if (item.action === "RESIZE") className = "resize";
+            else className = "ok";
+
+            table.innerHTML += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.cpu}%</td>
+                <td class="${className}">${item.action}</td>
+                <td>₹${item.savings_per_day}</td>
+            </tr>`;
+        });
+
+        document.getElementById("total").innerHTML =
+            "💰 Total Savings: ₹" + data.total_savings + "/day";
+    });
+}
+</script>
+
+</body>
+</html>
+""")
+
+# Optimization API
 @app.route('/optimize')
 def optimize():
     results = []
@@ -72,138 +148,13 @@ def optimize():
             "id": instance["id"],
             "cpu": cpu,
             "action": action,
-            "savings": savings
+            "savings_per_day": savings
         })
 
-    rows = ""
-    for r in results:
-        color = "green"
-        if r['action'] == "STOP":
-            color = "red"
-        elif r['action'] == "RESIZE":
-            color = "orange"
-
-        rows += f"""
-        <tr>
-            <td>{r['id']}</td>
-            <td>{r['cpu']}%</td>
-            <td style="color:{color}; font-weight:bold;">{r['action']}</td>
-            <td>${r['savings']}</td>
-        </tr>
-        """
-
-    return f"""
-    <html>
-    <head>
-        <title>Dashboard</title>
-        <style>
-            body {{
-                margin: 0;
-                font-family: Arial;
-                background-color: #f4f6f9;
-            }}
-
-            .header {{
-                background-color: #232f3e;
-                color: white;
-                padding: 15px;
-                font-size: 20px;
-                text-align: center;
-            }}
-
-            .container {{
-                padding: 20px;
-            }}
-
-            .cards {{
-                display: flex;
-                justify-content: center;
-                gap: 20px;
-                margin-bottom: 20px;
-            }}
-
-            .card {{
-                background: white;
-                padding: 20px;
-                border-radius: 10px;
-                width: 220px;
-                text-align: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }}
-
-            table {{
-                width: 80%;
-                margin: auto;
-                border-collapse: collapse;
-                background: white;
-                border-radius: 10px;
-                overflow: hidden;
-            }}
-
-            th {{
-                background-color: #0073bb;
-                color: white;
-                padding: 12px;
-            }}
-
-            td {{
-                padding: 12px;
-                text-align: center;
-                border-bottom: 1px solid #ddd;
-            }}
-
-            tr:hover {{
-                background-color: #f1f1f1;
-            }}
-
-            .back {{
-                display: block;
-                text-align: center;
-                margin-top: 20px;
-                font-size: 16px;
-                color: #0073bb;
-                text-decoration: none;
-            }}
-        </style>
-    </head>
-
-    <body>
-
-    <div class="header">
-        ☁️ Cloud Cost Optimizer Dashboard
-    </div>
-
-    <div class="container">
-
-        <div class="cards">
-            <div class="card">
-                <h3>🖥 Instances</h3>
-                <p>{len(results)}</p>
-            </div>
-
-            <div class="card">
-                <h3>💰 Total Savings</h3>
-                <p>${total_savings}</p>
-            </div>
-        </div>
-
-        <table>
-            <tr>
-                <th>Instance ID</th>
-                <th>CPU Usage</th>
-                <th>Action</th>
-                <th>Savings</th>
-            </tr>
-            {rows}
-        </table>
-
-        <a href="/" class="back">⬅ Back</a>
-
-    </div>
-
-    </body>
-    </html>
-    """
+    return jsonify({
+        "results": results,
+        "total_savings": total_savings
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

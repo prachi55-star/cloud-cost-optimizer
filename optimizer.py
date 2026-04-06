@@ -1,26 +1,28 @@
-instances = [
-    {"id": "i-101", "cpu": 10, "cost": 5},
-    {"id": "i-102", "cpu": 80, "cost": 10},
-    {"id": "i-103", "cpu": 35, "cost": 7}
-]
+def optimize_instances(instances):
+    results = []
+    total_savings = 0
 
-total_savings = 0
+    for instance in instances:
+        cpu = instance["cpu"]
+        cost = instance["cost"]
 
-for instance in instances:
-    cpu = instance["cpu"]
-    cost = instance["cost"]
+        if cpu < 20:
+            savings = cost * 24
+            action = "STOP"
+        elif cpu < 50:
+            savings = cost * 12
+            action = "RESIZE"
+        else:
+            savings = 0
+            action = "OK"
 
-    if cpu < 20:
-        savings = cost * 24  # daily saving
         total_savings += savings
-        print(f"{instance['id']}: STOP → Save ₹{savings}/day")
 
-    elif cpu < 50:
-        savings = cost * 12
-        total_savings += savings
-        print(f"{instance['id']}: RESIZE → Save ₹{savings}/day")
+        results.append({
+            "id": instance["id"],
+            "cpu": cpu,
+            "action": action,
+            "savings_per_day": savings
+        })
 
-    else:
-        print(f"{instance['id']}: OK → No savings")
-
-print(f"\nTotal Estimated Savings: ₹{total_savings}/day")
+    return results, total_savings
