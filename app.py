@@ -1,160 +1,97 @@
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, render_template, send_file
+import random
+import os
 
 app = Flask(__name__)
 
-# Sample instance data
-instances = [
-    {"id": "i-101", "cpu": 10, "cost": 5},
-    {"id": "i-102", "cpu": 80, "cost": 10},
-    {"id": "i-103", "cpu": 35, "cost": 7}
-]
-
-# Home route (UI)
+# ---------------- HOME PAGE ----------------
 @app.route('/')
 def home():
-    return render_template_string("""
-<html>
-<head>
-    <title>Cloud Cost Optimizer</title>
-    <style>
-        body {
-            background: #0b1f3a;
-            color: white;
-            font-family: Arial;
-            text-align: center;
-        }
-        h1 {
-            margin-top: 20px;
-        }
-        .card {
-            background: #1e3a5f;
-            padding: 20px;
-            margin: 20px auto;
-            width: 80%;
-            border-radius: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            color: black;
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
-        }
-        th {
-            background: #007BFF;
-            color: white;
-        }
-        .stop { color: red; font-weight: bold; }
-        .resize { color: orange; font-weight: bold; }
-        .ok { color: green; font-weight: bold; }
 
-        button {
-            padding: 12px 25px;
-            background: #28a745;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-
-<h1>☁️ Smart Cloud Cost Optimizer</h1>
-
-<div class="card">
-    <button onclick="loadData()">🚀 Optimize Now</button>
-
-    <table id="resultTable">
-        <tr>
-            <th>Instance ID</th>
-            <th>CPU</th>
-            <th>Action</th>
-            <th>Savings</th>
-        </tr>
-    </table>
-
-    <h2 id="total"></h2>
-</div>
-
-<script>
-function loadData() {
-    fetch('/optimize')
-    .then(res => res.json())
-    .then(data => {
-        let table = document.getElementById("resultTable");
-
-        table.innerHTML = `
-        <tr>
-            <th>Instance ID</th>
-            <th>CPU</th>
-            <th>Action</th>
-            <th>Savings</th>
-        </tr>`;
-
-        data.results.forEach(item => {
-            let className = "";
-            if (item.action === "STOP") className = "stop";
-            else if (item.action === "RESIZE") className = "resize";
-            else className = "ok";
-
-            table.innerHTML += `
-            <tr>
-                <td>${item.id}</td>
-                <td>${item.cpu}%</td>
-                <td class="${className}">${item.action}</td>
-                <td>₹${item.savings_per_day}</td>
-            </tr>`;
-        });
-
-        document.getElementById("total").innerHTML =
-            "💰 Total Savings: ₹" + data.total_savings + "/day";
-    });
-}
-</script>
-
-</body>
-</html>
-""")
-
-# Optimization API
-@app.route('/optimize')
-def optimize():
-    results = []
+    instances = []
     total_savings = 0
 
-    for instance in instances:
-        cpu = instance["cpu"]
-        cost = instance["cost"]
+    for i in range(5):
+        cpu = random.randint(1, 100)
+        memory = random.randint(10, 100)
+        last_active = random.randint(1, 48)
+        cost = random.randint(50, 200)
 
-        if cpu < 20:
-            savings = cost * 24
+        if cpu < 10 and memory < 20 and last_active > 24:
             action = "STOP"
-        elif cpu < 50:
-            savings = cost * 12
+            savings = cost
+        elif cpu < 30:
             action = "RESIZE"
+            savings = int(cost * 0.5)
+        elif cpu > 80:
+            action = "SCALE UP"
+            savings = -int(cost * 0.2)
         else:
-            savings = 0
             action = "OK"
+            savings = 0
 
         total_savings += savings
 
-        results.append({
-            "id": instance["id"],
+        instances.append({
+            "id": f"i-10{i}",
             "cpu": cpu,
+            "memory": memory,
+            "last_active": last_active,
+            "cost": cost,
             "action": action,
-            "savings_per_day": savings
+            "savings": savings
         })
 
-    return jsonify({
-        "results": results,
-        "total_savings": total_savings
-    })
+    return render_template("index.html",
+                           instances=instances,
+                           savings=total_savings)
+
+
+# ---------------- REPORT DOWNLOAD ----------------
+@app.route('/report')
+def generate_report():
+
+    instances = []
+    file_path = "cloud_report.txt"
+
+    for i in range(5):
+        cpu = random.randint(1, 100)
+        memory = random.randint(10, 100)
+        last_active = random.randint(1, 48)
+        cost = random.randint(50, 200)
+
+        if cpu < 10 and memory < 20 and last_active > 24:
+            action = "STOP"
+            savings = cost
+        elif cpu < 30:
+            action = "RESIZE"
+            savings = int(cost * 0.5)
+        else:
+            action = "OK"
+            savings = 0
+
+        instances.append({
+            "id": f"i-10{i}",
+            "action": action,
+            "cost": cost,
+            "savings": savings
+        })
+
+    total_cost = sum(i["cost"] for i in instances)
+    total_savings = sum(i["savings"] for i in instances)
+
+    with open(file_path, "w") as f:
+        f.write("CLOUD COST REPORT\n\n")
+
+        for i in instances:
+            f.write(f"{i['id']} | {i['action']} | ₹{i['cost']} | Save ₹{i['savings']}\n")
+
+        f.write("\n-----------------\n")
+        f.write(f"TOTAL COST: ₹{total_cost}\n")
+        f.write(f"TOTAL SAVINGS: ₹{total_savings}\n")
+
+    return send_file(file_path, as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

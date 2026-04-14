@@ -1,0 +1,11 @@
+CLOUD COST REPORT
+
+i-100 | RESIZE | ₹51 | Save ₹25
+i-101 | OK | ₹61 | Save ₹0
+i-102 | OK | ₹80 | Save ₹0
+i-103 | OK | ₹175 | Save ₹0
+i-104 | OK | ₹171 | Save ₹0
+
+-----------------
+TOTAL COST: ₹538
+TOTAL SAVINGS: ₹25
