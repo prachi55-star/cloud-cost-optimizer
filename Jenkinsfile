@@ -2,66 +2,43 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "Cloud Cost Optimizer"
+        IMAGE_NAME = "cost-optimizer"
+        CONTAINER_NAME = "cost-container"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                echo "Cloning latest code from GitHub..."
+                echo "Cloning latest code..."
                 checkout scm
             }
         }
 
-        stage('Verify Files') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                    echo "Current directory:"
-                    pwd
-
-                    echo "Files in workspace:"
-                    ls -la
+                    echo "Building Docker image..."
+                    docker build -t $IMAGE_NAME .
                 '''
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Stop Old Container') {
             steps {
                 sh '''
-                    echo "Installing dependencies..."
-                    python3 -m pip install --upgrade pip
-                    pip3 install -r requirements.txt
+                    echo "Stopping old container..."
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
                 '''
             }
         }
 
-        stage('Stop Old Application') {
+        stage('Run New Container') {
             steps {
                 sh '''
-                    echo "Stopping old Flask app..."
-                    pkill -f app.py || true
-                '''
-            }
-        }
-
-        stage('Start Application') {
-            steps {
-                sh '''
-                    echo "Starting Flask app..."
-
-                    nohup python3 app.py > app.log 2>&1 &
-
-                    sleep 5
-                '''
-            }
-        }
-
-        stage('Check Logs') {
-            steps {
-                sh '''
-                    echo "Checking logs..."
-                    cat app.log || echo "No logs found"
+                    echo "Starting new container..."
+                    docker run -d -p 5000:5000 --name $CONTAINER_NAME $IMAGE_NAME
                 '''
             }
         }
@@ -69,12 +46,11 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                    echo "Checking if app is running..."
+                    echo "Checking running containers..."
+                    docker ps
 
-                    ps -ef | grep app.py | grep -v grep || echo "App not running"
-
-                    echo "Checking port 5000..."
-                    sudo ss -tulnp | grep 5000 || echo "Port not active"
+                    echo "Checking app..."
+                    sleep 5
                 '''
             }
         }
@@ -82,10 +58,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ SUCCESS: Application deployed successfully!"
+            echo "✅ SUCCESS: Docker Deployment Completed!"
         }
         failure {
-            echo "❌ FAILED: Check logs in console output"
+            echo "❌ FAILED: Check Jenkins logs"
         }
     }
 }
