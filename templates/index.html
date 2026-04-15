@@ -3,51 +3,24 @@
 <head>
     <title>Cloud Cost Optimizer</title>
 </head>
-
 <body>
 
-<h1>☁️ Smart Cloud Cost Optimizer</h1>
+    <h1>Cloud Cost Dashboard</h1>
 
-<button onclick="optimize()">Optimize Now</button>
-<button onclick="downloadReport()">Download Report</button>
+    <h2>Total Cost: ₹{{ cost }}</h2>
 
-<hr>
+    {% if alert %}
+        <p style="color:red; font-weight:bold;">
+            {{ alert }}
+        </p>
+    {% endif %}
 
-<h2>💰 Total Savings: ₹{{ savings }}</h2>
-
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Instance ID</th>
-        <th>CPU</th>
-        <th>Memory</th>
-        <th>Last Active</th>
-        <th>Cost</th>
-        <th>Action</th>
-        <th>Savings</th>
-    </tr>
-
-    {% for i in instances %}
-    <tr>
-        <td>{{ i.id }}</td>
-        <td>{{ i.cpu }}</td>
-        <td>{{ i.memory }}</td>
-        <td>{{ i.last_active }}</td>
-        <td>{{ i.cost }}</td>
-        <td>{{ i.action }}</td>
-        <td>{{ i.savings }}</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<script>
-function downloadReport() {
-    window.location.href = "/report";
-}
-
-function optimize() {
-    window.location.href = "/";
-}
-</script>
+    <h3>Daily Costs:</h3>
+    <ul>
+        {% for cost in daily_costs %}
+            <li>₹{{ cost }}</li>
+        {% endfor %}
+    </ul>
 
 </body>
 </html>
