@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+nohup.out
+app.log
+
+# Virtual environment
+venv/
+env/
+
+# OS files
+.DS_Store
+
+# Temporary files
+*.tmp
