@@ -1,4 +1,4 @@
-# ☁️ Smart Cloud Cost Optimizer project
+# ☁️ Smart Cloud Cost Optimizer project.
 
 ## 📌 Project Description
 The Smart Cloud Cost Optimizer is a Python-based web application that analyzes cloud resource usage and suggests cost-saving actions.
