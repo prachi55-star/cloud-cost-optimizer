@@ -2,10 +2,17 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "cloud-cost-optimizer"
+        APP_NAME = "Cloud Cost Optimizer"
     }
 
     stages {
+
+        stage('Checkout Code') {
+            steps {
+                echo "Cloning latest code from GitHub..."
+                checkout scm
+            }
+        }
 
         stage('Verify Files') {
             steps {
@@ -13,7 +20,7 @@ pipeline {
                     echo "Current directory:"
                     pwd
 
-                    echo "Listing files:"
+                    echo "Files in workspace:"
                     ls -la
                 '''
             }
@@ -43,7 +50,6 @@ pipeline {
                 sh '''
                     echo "Starting Flask app..."
 
-                    cd cloud-cost-optimizer || exit 1
                     nohup python3 app.py > app.log 2>&1 &
 
                     sleep 5
@@ -54,19 +60,21 @@ pipeline {
         stage('Check Logs') {
             steps {
                 sh '''
-                    echo "Checking application logs..."
-                    cd cloud-cost-optimizer
-                    cat app.log || echo "No log file found"
+                    echo "Checking logs..."
+                    cat app.log || echo "No logs found"
                 '''
             }
         }
 
-        stage('Verify Running App') {
+        stage('Verify Deployment') {
             steps {
                 sh '''
                     echo "Checking if app is running..."
+
                     ps -ef | grep app.py | grep -v grep || echo "App not running"
-                    sudo ss -tulnp | grep 5000 || echo "Port 5000 not open"
+
+                    echo "Checking port 5000..."
+                    sudo ss -tulnp | grep 5000 || echo "Port not active"
                 '''
             }
         }
@@ -74,10 +82,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment SUCCESS - App should be running!"
+            echo "✅ SUCCESS: Application deployed successfully!"
         }
         failure {
-            echo "❌ Deployment FAILED - check logs"
+            echo "❌ FAILED: Check logs in console output"
         }
     }
 }
