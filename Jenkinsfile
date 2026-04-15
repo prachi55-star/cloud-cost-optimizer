@@ -5,6 +5,8 @@ pipeline {
         APP_DIR = "cloud-cost-optimizer"
     }
 
+    stages {
+
         stage('Verify Files') {
             steps {
                 sh '''
@@ -41,10 +43,7 @@ pipeline {
                 sh '''
                     echo "Starting Flask app..."
 
-                    # go into folder
                     cd cloud-cost-optimizer || exit 1
-
-                    # start app in background
                     nohup python3 app.py > app.log 2>&1 &
 
                     sleep 5
@@ -57,7 +56,6 @@ pipeline {
                 sh '''
                     echo "Checking application logs..."
                     cd cloud-cost-optimizer
-
                     cat app.log || echo "No log file found"
                 '''
             }
@@ -67,9 +65,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Checking if app is running..."
-
                     ps -ef | grep app.py | grep -v grep || echo "App not running"
-
                     sudo ss -tulnp | grep 5000 || echo "Port 5000 not open"
                 '''
             }
@@ -80,7 +76,6 @@ pipeline {
         success {
             echo "✅ Deployment SUCCESS - App should be running!"
         }
-
         failure {
             echo "❌ Deployment FAILED - check logs"
         }
