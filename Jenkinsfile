@@ -5,49 +5,72 @@ pipeline {
         APP_DIR = "cloud-cost-optimizer"
     }
 
-    stages {
-
-        stage('Checkout Code') {
+        stage('Verify Files') {
             steps {
-                echo "Cloning repository..."
-                git branch: 'main', url: 'https://github.com/YOUR_USERNAME/cloud-cost-optimizer.git'
+                sh '''
+                    echo "Current directory:"
+                    pwd
+
+                    echo "Listing files:"
+                    ls -la
+                '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo "Installing Python dependencies..."
                 sh '''
+                    echo "Installing dependencies..."
                     python3 -m pip install --upgrade pip
                     pip3 install -r requirements.txt
                 '''
             }
         }
 
-        stage('Stop Old App') {
+        stage('Stop Old Application') {
             steps {
-                echo "Stopping old running Flask app (if any)..."
                 sh '''
+                    echo "Stopping old Flask app..."
                     pkill -f app.py || true
                 '''
             }
         }
 
-        stage('Run Application') {
+        stage('Start Application') {
             steps {
-                echo "Starting Flask app..."
                 sh '''
+                    echo "Starting Flask app..."
+
+                    # go into folder
+                    cd cloud-cost-optimizer || exit 1
+
+                    # start app in background
                     nohup python3 app.py > app.log 2>&1 &
+
+                    sleep 5
                 '''
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Check Logs') {
             steps {
-                echo "Checking if app is running..."
                 sh '''
-                    sleep 5
+                    echo "Checking application logs..."
+                    cd cloud-cost-optimizer
+
+                    cat app.log || echo "No log file found"
+                '''
+            }
+        }
+
+        stage('Verify Running App') {
+            steps {
+                sh '''
+                    echo "Checking if app is running..."
+
                     ps -ef | grep app.py | grep -v grep || echo "App not running"
+
+                    sudo ss -tulnp | grep 5000 || echo "Port 5000 not open"
                 '''
             }
         }
@@ -55,11 +78,11 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment Successful!"
+            echo "✅ Deployment SUCCESS - App should be running!"
         }
 
         failure {
-            echo "❌ Deployment Failed!"
+            echo "❌ Deployment FAILED - check logs"
         }
     }
 }
