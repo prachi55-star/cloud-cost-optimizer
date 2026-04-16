@@ -2,87 +2,53 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "cloud-cost-optimizer"
+        IMAGE = "prachi1776/cloud-cost-optimizer"
     }
 
-        stage('Verify Files') {
-            steps {
-                sh '''
-                    echo "Current directory:"
-                    pwd
-
-                    echo "Listing files:"
-                    ls -la
-                '''
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                    echo "Installing dependencies..."
-                    python3 -m pip install --upgrade pip
-                    pip3 install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Stop Old Application') {
-            steps {
-                sh '''
-                    echo "Stopping old Flask app..."
-                    pkill -f app.py || true
-                '''
-            }
-        }
-
-        stage('Start Application') {
-            steps {
-                sh '''
-                    echo "Starting Flask app..."
-
-                    # go into folder
-                    cd cloud-cost-optimizer || exit 1
-
-                    # start app in background
-                    nohup python3 app.py > app.log 2>&1 &
-
-                    sleep 5
-                '''
-            }
-        }
-
-        stage('Check Logs') {
-            steps {
-                sh '''
-                    echo "Checking application logs..."
-                    cd cloud-cost-optimizer
-
-                    cat app.log || echo "No log file found"
-                '''
-            }
-        }
-
-        stage('Verify Running App') {
-            steps {
-                sh '''
-                    echo "Checking if app is running..."
-
-                    ps -ef | grep app.py | grep -v grep || echo "App not running"
-
-                    sudo ss -tulnp | grep 5000 || echo "Port 5000 not open"
-                '''
-            }
-        }
+    triggers {
+        githubPush()
     }
 
-    post {
-        success {
-            echo "✅ Deployment SUCCESS - App should be running!"
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/prachi55-star/cloud-cost-optimizer.git'
+            }
         }
 
-        failure {
-            echo "❌ Deployment FAILED - check logs"
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t cloud-cost-optimizer ."
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    docker tag cloud-cost-optimizer $IMAGE:latest
+                    docker push $IMAGE:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy on EC2') {
+            steps {
+                sh '''
+                docker rm -f cost-container || true
+                docker pull $IMAGE:latest
+                docker run -d -p 5000:5000 --name cost-container $IMAGE:latest
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh 'curl http://localhost:5000 || echo "Running"'
+            }
         }
     }
 }

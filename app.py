@@ -1,37 +1,42 @@
-from flask import Flask, render_template, send_file
-import random
+from flask import Flask, render_template
+import matplotlib.pyplot as plt
 import os
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
-# ---------------- HOME PAGE ----------------
-@app.route('/')
+@app.route("/")
 def home():
+    # Dummy data
+    daily_costs = [120, 150, 200, 180, 220, 250, 300]
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-    instances = []
-    total_savings = 0
+    # Total cost
+    total_cost = sum(daily_costs)
 
+<<<<<<< HEAD
     # Generate fake cloud data
     for i in range(5):
         cpu = random.randint(1, 100)
         memory = random.randint(10, 100)
         last_active = random.randint(1, 48)
         cost = random.randint(50, 200)
+=======
+    # Alert logic
+    LIMIT = 500
+    alert_message = None
+    if total_cost > LIMIT:
+        alert_message = f"⚠️ Alert: Monthly cost exceeded ₹{LIMIT}"
+>>>>>>> 61fdf71b80d67e09a290d7983f6efa500503cc2d
 
-        if cpu < 10 and memory < 20 and last_active > 24:
-            action = "STOP"
-            savings = cost
-        elif cpu < 30:
-            action = "RESIZE"
-            savings = int(cost * 0.5)
-        elif cpu > 80:
-            action = "SCALE UP"
-            savings = -int(cost * 0.2)
-        else:
-            action = "OK"
-            savings = 0
+    # 📊 Create graph
+    plt.figure()
+    plt.plot(days, daily_costs, marker='o')
+    plt.title("Daily Cloud Cost")
+    plt.xlabel("Days")
+    plt.ylabel("Cost (₹)")
 
+<<<<<<< HEAD
         total_savings += savings
 
         instances.append({
@@ -113,7 +118,20 @@ def generate_report():
         f.write(f"TOTAL SAVINGS: ₹{total_savings}\n")
 
     return send_file(file_path, as_attachment=True)
+=======
+    # Save graph
+    graph_path = "static/cost_graph.png"
+    os.makedirs("static", exist_ok=True)
+    plt.savefig(graph_path)
+    plt.close()
+>>>>>>> 61fdf71b80d67e09a290d7983f6efa500503cc2d
 
+    return render_template(
+        "index.html",
+        cost=total_cost,
+        alert=alert_message,
+        graph=graph_path
+    )
 
 # ---------------- RUN APP ----------------
 if __name__ == "__main__":

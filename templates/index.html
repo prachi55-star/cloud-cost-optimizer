@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <title>Cloud Cost Optimizer Dashboard</title>
 
     <style>
@@ -89,10 +90,17 @@
             border-radius: 10px;
         }
     </style>
+=======
+    <title>Cloud Cost Optimizer</title>
+
+    <!-- ✅ IMPORTANT: CSS LINK -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+>>>>>>> 61fdf71b80d67e09a290d7983f6efa500503cc2d
 </head>
 
 <body>
 
+<<<<<<< HEAD
 <div class="container">
 
     <h1>☁ Cloud Cost Optimizer Dashboard</h1>
@@ -146,6 +154,56 @@
     </div>
 
 </div>
+=======
+    <h1>💰 Cloud Cost Optimizer Dashboard</h1>
+
+    <!-- 📊 STATS -->
+    <div class="stats">
+        <div class="stat-box">
+            <h2>₹ {{ savings }}</h2>
+            <p>Total Savings</p>
+        </div>
+    </div>
+
+    <!-- ⬇ REPORT BUTTON -->
+    <div style="text-align:center;">
+        <a class="btn" href="/report">⬇ Download Report</a>
+    </div>
+
+    <!-- 📋 TABLE -->
+    <div class="container">
+        <table>
+            <tr>
+                <th>Instance ID</th>
+                <th>CPU %</th>
+                <th>Memory %</th>
+                <th>Last Active</th>
+                <th>Cost</th>
+                <th>Action</th>
+                <th>Savings</th>
+            </tr>
+
+            {% for i in instances %}
+            <tr>
+                <td>{{ i.id }}</td>
+                <td>{{ i.cpu }}</td>
+                <td>{{ i.memory }}</td>
+                <td>{{ i.last_active }}</td>
+                <td>₹ {{ i.cost }}</td>
+                <td>{{ i.action }}</td>
+                <td>₹ {{ i.savings }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 📊 GRAPH -->
+    <h2>📊 CPU Usage Graph</h2>
+
+    <div style="text-align:center;">
+        <img src="{{ url_for('static', filename='graph.png') }}" alt="CPU Graph">
+    </div>
+>>>>>>> 61fdf71b80d67e09a290d7983f6efa500503cc2d
 
 </body>
 </html>
