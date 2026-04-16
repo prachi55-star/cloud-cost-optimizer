@@ -1,48 +1,70 @@
-# ☁️ Smart Cloud Cost Optimizer project....
+☁️ Cloud Cost Optimizer (DevOps Project)
 
-## 📌 Project Description
-The Smart Cloud Cost Optimizer is a Python-based web application that analyzes cloud resource usage and suggests cost-saving actions.
+A fully automated DevOps project that analyzes cloud instance usage and provides cost optimization suggestions using a Flask web app with CI/CD pipeline using Jenkins and Docker.
 
-It identifies underutilized instances and recommends whether to STOP or RESIZE them, helping reduce unnecessary cloud expenses.
+🚀 Features
 
----
+✔ Cloud instance monitoring (CPU, Memory, Cost)  
+✔ Auto optimization logic (STOP / RESIZE / SCALE UP)  
+✔ Graph generation using Matplotlib  
+✔ Downloadable cost report  
+✔ Modern dashboard UI  
+✔ Docker containerized deployment  
+✔ Fully automated CI/CD pipeline  
 
-## 🚀 Features
-- Detect underutilized cloud instances
-- Suggest actions: STOP / RESIZE / OK
-- Calculate estimated daily cost savings
-- Interactive dashboard UI with professional design
-- API-based backend using Flask
 
----
+ 🧰 Tech Stack
 
-## 🛠 Tech Stack
-- Python
-- Flask
-- HTML / CSS / JavaScript
-- Git & GitHub
+- Python (Flask)
+- Docker
+- Jenkins
+- GitHub
+- Matplotlib
+- HTML / CSS
 
----
 
-## 📊 Sample Output
-- Instance i-101 → STOP → Save ₹120/day
-- Instance i-103 → RESIZE → Save ₹84/day
+ 🔁 CI/CD Pipeline Flow
 
----
-
-## 🌐 API Endpoints
-- `/` → Dashboard UI
-- `/optimize` → Get optimization results (JSON)
+GitHub → Jenkins → Docker Build → DockerHub → EC2 Deploy → Live Website
 
 ---
 
-## 📷 UI Preview
-(Add a screenshot of your dashboard here)
+ 🏗️ Architecture Diagram
++-------------+        +-------------+        +--------------+ |   GitHub    |  --->  |   Jenkins   |  --->  |   Docker     | |  (Code)     |        |  Pipeline   |        |  Image Build | +-------------+        +-------------+        +--------------+ | v +--------------+ |  DockerHub   | |  Registry    | +--------------+ | v +--------------+ |     EC2      | | Flask App    | +--------------+ | v +--------------+ |  Live Site   | +--------------+
+ 
+ ⚙️ How to Run Locally
+git clone https://github.com/your-username/cloud-cost-optimizer.git
+cd cloud-cost-optimizer
+pip install -r requirements.txt
+python app.py
 
----
+🐳 Docker Setup
+Bash
+docker build -t cloud-cost-optimizer .
+docker run -d -p 5000:5000 cloud-cost-optimizer
 
-## ▶️ How to Run
+📊 Output
+✔ Dashboard with instance data
+✔ CPU usage graph
+✔ Cost optimization suggestions
+✔ Downloadable report
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/prachi55-star/cloud-cost-optimizer.git
+🔐 CI/CD Pipeline Stages
+GitHub Push
+Jenkins Auto Trigger
+Docker Image Build
+DockerHub Push
+EC2 Deployment
+Live Website Update
+
+📌 Project Goal
+To simulate real-world DevOps automation where infrastructure cost is optimized using intelligent instance analysis and fully automated deployment pipeline.
+
+Author
+Prachi Dhole
+DevOps & Cloud Enthusiast 🚀
+
+
+
+
+
