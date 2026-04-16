@@ -1,53 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cloud Cost Optimizer</title>
+    <meta charset="UTF-8">
+    <title>Cloud Cost Optimizer Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .stop {
+            color: red;
+            font-weight: bold;
+        }
+
+        .resize {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2ecc71;
+            color: white;
+            text-align: center;
+            font-size: 18px;
+            border-radius: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background: #c0392b;
+        }
+
+        .graph {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 600px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 
 <body>
 
-<h1>☁️ Smart Cloud Cost Optimizer</h1>
+<div class="container">
 
-<button onclick="optimize()">Optimize Now</button>
-<button onclick="downloadReport()">Download Report</button>
+    <h1>☁ Cloud Cost Optimizer Dashboard</h1>
 
-<hr>
+    <!-- Summary -->
+    <div class="summary">
+        💰 Total Estimated Savings: ₹ {{ savings }}
+    </div>
 
-<h2>💰 Total Savings: ₹{{ savings }}</h2>
+    <!-- Download Report -->
+    <div style="text-align:center;">
+        <a class="btn" href="/report">⬇ Download Report</a>
+    </div>
 
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Instance ID</th>
-        <th>CPU</th>
-        <th>Memory</th>
-        <th>Last Active</th>
-        <th>Cost</th>
-        <th>Action</th>
-        <th>Savings</th>
-    </tr>
+    <!-- Instances Table -->
+    <table>
+        <tr>
+            <th>Instance ID</th>
+            <th>CPU %</th>
+            <th>Memory %</th>
+            <th>Last Active (hrs)</th>
+            <th>Cost</th>
+            <th>Action</th>
+            <th>Savings</th>
+        </tr>
 
-    {% for i in instances %}
-    <tr>
-        <td>{{ i.id }}</td>
-        <td>{{ i.cpu }}</td>
-        <td>{{ i.memory }}</td>
-        <td>{{ i.last_active }}</td>
-        <td>{{ i.cost }}</td>
-        <td>{{ i.action }}</td>
-        <td>{{ i.savings }}</td>
-    </tr>
-    {% endfor %}
-</table>
+        {% for i in instances %}
+        <tr>
+            <td>{{ i.id }}</td>
+            <td>{{ i.cpu }}</td>
+            <td>{{ i.memory }}</td>
+            <td>{{ i.last_active }}</td>
+            <td>₹ {{ i.cost }}</td>
 
-<script>
-function downloadReport() {
-    window.location.href = "/report";
-}
+            <td
+                class="{% if i.action == 'STOP' %}stop
+                        {% elif i.action == 'RESIZE' %}resize
+                        {% else %}ok{% endif %}">
+                {{ i.action }}
+            </td>
 
-function optimize() {
-    window.location.href = "/";
-}
-</script>
+            <td>₹ {{ i.savings }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Graph Section -->
+    <div class="graph">
+        <h2>📊 CPU Usage Graph</h2>
+        <img src="/static/graph.png" alt="CPU Graph">
+    </div>
+
+</div>
 
 </body>
 </html>

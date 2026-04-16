@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_file
 import random
 import os
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -11,6 +12,7 @@ def home():
     instances = []
     total_savings = 0
 
+    # Generate fake cloud data
     for i in range(5):
         cpu = random.randint(1, 100)
         memory = random.randint(10, 100)
@@ -42,9 +44,29 @@ def home():
             "savings": savings
         })
 
-    return render_template("index.html",
-                           instances=instances,
-                           savings=total_savings)
+    # ---------------- GRAPH GENERATION (FIXED) ----------------
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    static_dir = os.path.join(BASE_DIR, "static")
+
+    os.makedirs(static_dir, exist_ok=True)
+
+    cpu_values = [i["cpu"] for i in instances]
+    ids = [i["id"] for i in instances]
+
+    plt.figure(figsize=(6, 4))
+    plt.bar(ids, cpu_values)
+    plt.title("CPU Usage per Instance")
+    plt.xlabel("Instance ID")
+    plt.ylabel("CPU %")
+
+    plt.savefig(os.path.join(static_dir, "graph.png"))
+    plt.close()
+
+    return render_template(
+        "index.html",
+        instances=instances,
+        savings=total_savings
+    )
 
 
 # ---------------- REPORT DOWNLOAD ----------------
@@ -93,5 +115,6 @@ def generate_report():
     return send_file(file_path, as_attachment=True)
 
 
+# ---------------- RUN APP ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
