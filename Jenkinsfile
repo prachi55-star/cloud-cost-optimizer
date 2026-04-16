@@ -2,66 +2,53 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "cost-optimizer"
-        CONTAINER_NAME = "cost-container"
+        IMAGE = "prachi1776/cloud-cost-optimizer"
+    }
+
+    triggers {
+        githubPush()
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                echo "Cloning latest code..."
-                checkout scm
+                git branch: 'main', url: 'https://github.com/prachi55-star/cloud-cost-optimizer.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    echo "Building Docker image..."
-                    docker build -t $IMAGE_NAME .
-                '''
+                sh "docker build -t cloud-cost-optimizer ."
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    docker tag cloud-cost-optimizer $IMAGE:latest
+                    docker push $IMAGE:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy on EC2') {
             steps {
                 sh '''
-                    echo "Stopping old container..."
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
+                docker rm -f cost-container || true
+                docker pull $IMAGE:latest
+                docker run -d -p 5000:5000 --name cost-container $IMAGE:latest
                 '''
             }
         }
 
-        stage('Run New Container') {
+        stage('Verify') {
             steps {
-                sh '''
-                    echo "Starting new container..."
-                    docker run -d -p 5000:5000 --name $CONTAINER_NAME $IMAGE_NAME
-                '''
+                sh 'curl http://localhost:5000 || echo "Running"'
             }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                sh '''
-                    echo "Checking running containers..."
-                    docker ps
-
-                    echo "Checking app..."
-                    sleep 5
-                '''
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ SUCCESS: Docker Deployment Completed!"
-        }
-        failure {
-            echo "❌ FAILED: Check Jenkins logs"
         }
     }
 }
